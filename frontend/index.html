@@ -3,138 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M4A Tag-Master Studio | Pure Client Edition</title>
+  <title>M4A Tag-Master Studio | Slim Edition</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body class="theme-neumorphic">
-  <div class="app-container">
+  <div class="app-container slim-container">
     <!-- Header -->
-    <header class="app-header">
+    <header class="app-header slim-header">
       <div class="logo-area">
         <div class="logo-icon"><i class="fa-solid fa-compact-disc"></i></div>
-        <div>
-          <h1 class="logo-text">M4A Tag-Master Studio</h1>
-          <p class="logo-subtext">Pure Client-Side M4A Metadata & Lyrics Tagger Studio</p>
-        </div>
+        <h1 class="logo-text">M4A Tag-Master Studio</h1>
       </div>
-      <div class="header-badge">
-        <span class="pulse-dot"></span>
-        <span>Zero-Server &bull; 100% Client Tagger &bull; MP4Cover + ©lyr</span>
-      </div>
+      <span class="header-badge"><i class="fa-solid fa-bolt"></i> Slim Edition</span>
     </header>
 
-    <!-- Section 1: File Selection & Metadata Search Bar -->
-    <section class="url-section card-neumorphic">
-      <div class="file-upload-bar">
+    <!-- Main Single Studio Card -->
+    <main class="studio-card card-neumorphic">
+      <!-- Row 1: File Input & Smart Search -->
+      <div class="input-bar-row">
         <input type="file" id="m4a-file-input" accept=".m4a,audio/mp4,audio/x-m4a" class="hidden">
-        <button id="select-m4a-btn" class="btn btn-secondary flex-grow-btn">
-          <i class="fa-solid fa-folder-open"></i> <span id="m4a-filename-display">아이폰 [파일] 앱 또는 PC에서 .m4a 음원 선택</span>
+        <button id="select-m4a-btn" class="btn btn-secondary btn-file-select">
+          <i class="fa-solid fa-folder-open"></i> <span id="m4a-filename-display">.m4a 음원 선택</span>
         </button>
+
+        <div class="search-input-wrapper">
+          <input type="text" id="search-query" class="inset-input slim-input" placeholder="곡명/가수 검색 (예: 이적 하늘을 달리다)">
+          <button id="search-btn" class="btn btn-primary btn-search">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>수집</span>
+          </button>
+        </div>
       </div>
 
-      <div class="search-bar-row">
-        <div class="url-input-wrapper">
-          <i class="fa-solid fa-magnifying-glass url-icon"></i>
-          <input type="text" id="search-query" class="inset-input" placeholder="곡 제목 및 아티스트 검색 (예: 이적 하늘을 달리다 / IU Love wins all)">
+      <!-- Row 2: Compact Editor (140px Cover + Metadata Inputs) -->
+      <div class="compact-editor-row">
+        <!-- Cover Art (140x140) -->
+        <div class="cover-column">
+          <div id="cover-frame" class="cover-frame inset-frame slim-cover-frame" title="터치하여 이미지 변경">
+            <div id="cover-placeholder" class="cover-placeholder">
+              <i class="fa-solid fa-music"></i>
+              <span>커버 선택</span>
+            </div>
+            <img id="cover-preview" src="" alt="Album Art" class="hidden">
+            <div id="drag-overlay" class="drag-overlay hidden">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+          </div>
+          <input type="file" id="cover-file" accept="image/jpeg,image/png,image/webp" class="hidden">
+          <button id="upload-cover-btn" class="btn btn-xs full-width">
+            <i class="fa-solid fa-camera"></i> <span>커버 변경</span>
+          </button>
         </div>
-        <button id="search-btn" class="btn btn-primary">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> <span>커버 & 가사 자동 수집</span>
-        </button>
+
+        <!-- Metadata Form -->
+        <div class="metadata-column">
+          <div class="form-row">
+            <label for="track-title"><i class="fa-solid fa-heading"></i> 제목</label>
+            <input type="text" id="track-title" class="inset-input slim-input" placeholder="곡 제목 (©nam)">
+          </div>
+
+          <div class="form-row">
+            <label for="track-artist"><i class="fa-solid fa-user-music"></i> 가수</label>
+            <input type="text" id="track-artist" class="inset-input slim-input" placeholder="아티스트명 (©ART)">
+          </div>
+
+          <div class="form-row">
+            <label for="track-album"><i class="fa-solid fa-record-vinyl"></i> 앨범</label>
+            <input type="text" id="track-album" class="inset-input slim-input" placeholder="앨범명 (©alb)">
+          </div>
+        </div>
       </div>
-    </section>
 
-    <!-- Section 2: Studio Grid -->
-    <main class="studio-grid">
-      <!-- Column 1: Cover Art Frame -->
-      <section class="cover-section card-neumorphic">
-        <div class="section-title">
-          <i class="fa-solid fa-image"></i>
-          <span>1:1 앨범 아트 커버 (MP4Cover)</span>
-          <span id="cover-source-tag" class="source-tag hidden">소스 정보</span>
-        </div>
-        
-        <div id="cover-frame" class="cover-frame inset-frame">
-          <div id="cover-placeholder" class="cover-placeholder">
-            <i class="fa-solid fa-music"></i>
-            <p>음원 검색 또는<br>이미지를 드래그 앤 드롭하세요</p>
+      <!-- Row 3: Collapsible Lyrics Accordion -->
+      <div class="lyrics-accordion card-inset">
+        <div id="lyrics-accordion-header" class="accordion-header">
+          <div class="accordion-title">
+            <i class="fa-solid fa-align-left"></i>
+            <span>표준 가사 텍스트 (©lyr)</span>
+            <span id="lyrics-status-tag" class="status-tag">비어있음</span>
           </div>
-          <img id="cover-preview" src="" alt="Album Art" class="hidden">
-          <div id="drag-overlay" class="drag-overlay hidden">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-            <span>여기에 사진을 놓아 커버 교체</span>
-          </div>
+          <i id="accordion-arrow" class="fa-solid fa-chevron-down accordion-arrow"></i>
         </div>
+        <div id="lyrics-accordion-body" class="accordion-body collapsed">
+          <textarea id="track-lyrics" class="inset-input textarea-lyrics-slim" placeholder="검색 시 가사가 자동 로드되며, 클릭하여 직접 수정/편집할 수 있습니다." rows="3"></textarea>
+        </div>
+      </div>
 
-        <input type="file" id="cover-file" accept="image/jpeg,image/png,image/webp" class="hidden">
-        <button id="upload-cover-btn" class="btn btn-secondary full-width">
-          <i class="fa-solid fa-camera"></i> <span>내 PC/아이폰 커버 사진 교체하기</span>
+      <!-- Row 4: Single Main Export Action -->
+      <div class="action-row">
+        <button id="start-tag-btn" class="btn btn-main-action full-width">
+          <i class="fa-solid fa-circle-down"></i>
+          <span>🎉 완벽한 M4A 음원 생성 & 파일 앱에 저장</span>
         </button>
-      </section>
 
-      <!-- Column 2: Metadata & Lyrics Editor -->
-      <section class="editor-section card-neumorphic">
-        <div class="section-title">
-          <i class="fa-solid fa-pen-to-square"></i>
-          <span>메타데이터 및 가사 에디터 (MP4 Atoms)</span>
+        <!-- Hidden Fallback Download Link -->
+        <div id="download-box" class="download-box hidden">
+          <a id="download-link" href="#" class="btn btn-download full-width" download>
+            <i class="fa-solid fa-file-arrow-down"></i> <span id="finished-filename">다운로드</span>
+          </a>
         </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="track-title"><i class="fa-solid fa-heading"></i> 곡 제목 (©nam)</label>
-            <input type="text" id="track-title" class="inset-input" placeholder="곡 제목">
-          </div>
-
-          <div class="form-group">
-            <label for="track-artist"><i class="fa-solid fa-user-music"></i> 아티스트 (©ART)</label>
-            <input type="text" id="track-artist" class="inset-input" placeholder="아티스트명">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="track-album"><i class="fa-solid fa-record-vinyl"></i> 앨범명 (©alb)</label>
-          <input type="text" id="track-album" class="inset-input" placeholder="앨범명 (비워둘 시 싱글 앨범 자동 지정)">
-        </div>
-
-        <div class="form-group lyrics-group">
-          <label for="track-lyrics">
-            <span><i class="fa-solid fa-align-left"></i> 표준 가사 텍스트 (©lyr)</span>
-            <span class="lyrics-hint">Apple Music / 아이폰 완벽 호환 비싱크 가사</span>
-          </label>
-          <textarea id="track-lyrics" class="inset-input textarea-lyrics" placeholder="검색 시 LRCLIB에서 가사가 자동 수집되며, 직접 수정하거나 자유롭게 작성하실 수 있습니다." rows="8"></textarea>
-        </div>
-      </section>
+      </div>
     </main>
 
-    <!-- Section 3: Action & Export Panel -->
-    <section class="action-section card-neumorphic">
-      <!-- Main Trigger Button -->
-      <button id="start-tag-btn" class="btn btn-main-action">
-        <i class="fa-solid fa-sparkles"></i>
-        <span>🎉 완벽한 M4A 음원 생성 & 내 기기에 저장하기</span>
-      </button>
-
-      <!-- Download Box (Hidden by default) -->
-      <div id="download-box" class="download-box hidden">
-        <div class="success-message">
-          <i class="fa-solid fa-circle-check"></i>
-          <div>
-            <h4>완벽한 태그가 포함된 음원이 완성되었습니다!</h4>
-            <p id="finished-filename">filename.m4a</p>
-          </div>
-        </div>
-        <a id="download-link" href="#" class="btn btn-download" download>
-          <i class="fa-solid fa-file-arrow-down"></i> <span>내 PC/아이폰으로 저장하기</span>
-        </a>
-      </div>
-    </section>
-
     <!-- Footer -->
-    <footer class="app-footer">
-      <p>Powered by Google Antigravity &bull; Pure Client-Side M4A Engine</p>
+    <footer class="app-footer slim-footer">
+      <p>M4A Tag-Master Studio &bull; iOS Save to Files Ready</p>
     </footer>
   </div>
 
