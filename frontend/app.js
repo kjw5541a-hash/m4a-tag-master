@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const BACKEND_HOST = window.CONFIG_BACKEND_HOST || (
     window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? window.location.host
-      : 'your-render-app-name.onrender.com' // 👈 Render 배포 후 본인 앱 주소로 변경
+      : 'm4a-tag-master-backend.onrender.com'
   );
 
   const API_HTTP_BASE = BACKEND_HOST.startsWith('http') 
