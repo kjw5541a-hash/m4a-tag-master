@@ -1,13 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const urlInput = document.getElementById('youtube-url');
-  const analyzeBtn = document.getElementById('analyze-btn');
-  const startTagBtn = document.getElementById('start-tag-btn');
+  const m4aFileInput = document.getElementById('m4a-file-input');
+  const selectM4aBtn = document.getElementById('select-m4a-btn');
+  const m4aFilenameDisplay = document.getElementById('m4a-filename-display');
   
+  const searchQuery = document.getElementById('search-query');
+  const searchBtn = document.getElementById('search-btn');
+
   const trackTitle = document.getElementById('track-title');
   const trackArtist = document.getElementById('track-artist');
   const trackAlbum = document.getElementById('track-album');
   const trackLyrics = document.getElementById('track-lyrics');
-  
+
   const coverFrame = document.getElementById('cover-frame');
   const coverPlaceholder = document.getElementById('cover-placeholder');
   const coverPreview = document.getElementById('cover-preview');
@@ -15,210 +18,222 @@ document.addEventListener('DOMContentLoaded', () => {
   const coverFileInput = document.getElementById('cover-file');
   const uploadCoverBtn = document.getElementById('upload-cover-btn');
   const dragOverlay = document.getElementById('drag-overlay');
-  
-  const progressBox = document.getElementById('progress-box');
-  const progressStatus = document.getElementById('progress-status');
-  const progressInfo = document.getElementById('progress-info');
-  const progressBar = document.getElementById('progress-bar');
-  
+
+  const startTagBtn = document.getElementById('start-tag-btn');
   const downloadBox = document.getElementById('download-box');
   const finishedFilename = document.getElementById('finished-filename');
   const downloadLink = document.getElementById('download-link');
 
-  // 🌐 백엔드 서버 주소 설정 (Vercel 배포 시 Render 백엔드로 연결, 로컬 구동 시 자동 감지)
-  const BACKEND_HOST = window.CONFIG_BACKEND_HOST || (
-    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? window.location.host
-      : 'm4a-tag-master-backend.onrender.com'
-  );
+  let currentM4aArrayBuffer = null;
+  let currentOriginalFilename = "song.m4a";
+  let currentCoverBytes = null; // Uint8Array
 
-  const API_HTTP_BASE = BACKEND_HOST.startsWith('http') 
-    ? BACKEND_HOST 
-    : `${window.location.protocol}//${BACKEND_HOST}`;
+  // 1. .m4a 음원 파일 선택 처리
+  selectM4aBtn.addEventListener('click', () => m4aFileInput.click());
 
-  const API_WS_BASE = BACKEND_HOST.startsWith('http')
-    ? BACKEND_HOST.replace(/^http/, 'ws')
-    : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${BACKEND_HOST}`;
+  m4aFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleSelectedM4aFile(file);
+  });
 
-  let currentCoverBase64 = "";
+  function handleSelectedM4aFile(file) {
+    currentOriginalFilename = file.name;
+    m4aFilenameDisplay.textContent = `🎵 ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
 
-  // 1. 유튜브 URL 분석 요청
-  analyzeBtn.addEventListener('click', async () => {
-    const url = urlInput.value.trim();
-    if (!url) {
-      alert('유튜브 음악 영상 URL을 입력해주세요.');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      currentM4aArrayBuffer = e.target.result;
+      console.log('M4A ArrayBuffer Loaded:', currentM4aArrayBuffer.byteLength);
+
+      // 파일명에서 아티스트/제목 추정 및 자동 검색 쿼리 구성
+      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+      const cleanedQuery = nameWithoutExt.replace(/\[.*?\]|\(.*?\)|official|music video|mv|hd/gi, "").trim();
+      searchQuery.value = cleanedQuery;
+
+      // 자동 파싱 시도 (아티스트 - 곡제목)
+      if (cleanedQuery.includes('-')) {
+        const parts = cleanedQuery.split('-');
+        trackArtist.value = parts[0].strip ? parts[0].strip() : parts[0].trim();
+        trackTitle.value = parts[1].strip ? parts[1].strip() : parts[1].trim();
+      } else {
+        trackTitle.value = cleanedQuery;
+      }
+
+      // 파싱 직후 자동 검색 실행
+      if (cleanedQuery) {
+        fetchMetadataAndLyrics(cleanedQuery);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // 2. iTunes & LRCLIB API 직접 검색
+  searchBtn.addEventListener('click', () => {
+    const q = searchQuery.value.trim();
+    if (!q) {
+      alert('검색할 곡 제목이나 아티스트 이름을 입력해 주세요.');
       return;
     }
+    fetchMetadataAndLyrics(q);
+  });
 
-    analyzeBtn.disabled = true;
-    analyzeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>메타데이터 분석 및 고화질 커버 탐색 중...</span>';
-    downloadBox.classList.add('hidden');
-    progressBox.classList.add('hidden');
+  async function fetchMetadataAndLyrics(query) {
+    searchBtn.disabled = true;
+    searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>탐색 중...</span>';
 
     try {
-      const resp = await fetch(`${API_HTTP_BASE}/api/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
+      // 2-1. iTunes Search API (1:1 1000x1000 High-Res Cover Art & Info)
+      const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=3`;
+      const itunesResp = await fetch(itunesUrl);
+      if (itunesResp.ok) {
+        const data = await itunesResp.json();
+        if (data.results && data.results.length > 0) {
+          const match = data.results[0];
+          if (!trackTitle.value || trackTitle.value === query) trackTitle.value = match.trackName || '';
+          if (!trackArtist.value) trackArtist.value = match.artistName || '';
+          if (!trackAlbum.value) trackAlbum.value = match.collectionName || '';
 
-      const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.detail || '분석에 실패했습니다.');
-      }
+          const artUrl = match.artworkUrl100
+            ? match.artworkUrl100.replace('100x100bb.jpg', '1000x1000bb.jpg').replace('100x100.jpg', '1000x1000.jpg')
+            : '';
 
-      // 폼 데이터 채우기
-      trackTitle.value = data.title || '';
-      trackArtist.value = data.artist || '';
-      trackAlbum.value = data.album || '';
-      trackLyrics.value = data.lyrics || '';
-      
-      // 커버 사진 설정
-      if (data.cover_base64) {
-        currentCoverBase64 = data.cover_base64;
-        coverPreview.src = currentCoverBase64;
-        coverPreview.classList.remove('hidden');
-        coverPlaceholder.classList.add('hidden');
-        if (data.cover_source) {
-          coverSourceTag.textContent = data.cover_source;
-          coverSourceTag.classList.remove('hidden');
+          if (artUrl) {
+            loadCoverFromUrl(artUrl, 'iTunes 1000x1000 High-Res');
+          }
         }
-      } else {
-        coverPreview.classList.add('hidden');
-        coverPlaceholder.classList.remove('hidden');
-        coverSourceTag.classList.add('hidden');
-        currentCoverBase64 = "";
       }
 
-      startTagBtn.disabled = false;
-
+      // 2-2. LRCLIB API (Lyrics)
+      const lrclibUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+      const lrclibResp = await fetch(lrclibUrl);
+      if (lrclibResp.ok) {
+        const lrcData = await lrclibResp.json();
+        if (Array.isArray(lrcData) && lrcData.length > 0) {
+          const best = lrcData[0];
+          let lyricsText = best.plainLyrics;
+          if (!lyricsText && best.syncedLyrics) {
+            lyricsText = best.syncedLyrics.replace(/\[\d{2}:\d{2}\.\d{2,3}\]\s*/g, '');
+          }
+          if (lyricsText) {
+            trackLyrics.value = lyricsText.trim();
+          }
+        }
+      }
     } catch (err) {
-      alert(`오류 발생: ${err.message}`);
+      console.warn('API Fetch Notice:', err);
     } finally {
-      analyzeBtn.disabled = false;
-      analyzeBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>분석 및 메타데이터 스크래핑</span>';
+      searchBtn.disabled = false;
+      searchBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>커버 & 가사 자동 수집</span>';
     }
-  });
+  }
 
-  // 2. 커버 사진 교체 (파일 첨부 버튼)
-  uploadCoverBtn.addEventListener('click', () => {
-    coverFileInput.click();
-  });
+  // 3. 커버 이미지 로드 및 1:1 정방형 캔버스 변환
+  function loadCoverFromUrl(url, sourceName) {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1000;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
 
+      // 1:1 Center Crop
+      const minDim = Math.min(img.width, img.height);
+      const sx = (img.width - minDim) / 2;
+      const sy = (img.height - minDim) / 2;
+
+      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 1000, 1000);
+      coverPreview.src = canvas.toDataURL('image/jpeg', 0.92);
+      coverPreview.classList.remove('hidden');
+      coverPlaceholder.classList.add('hidden');
+
+      if (sourceName) {
+        coverSourceTag.textContent = sourceName;
+        coverSourceTag.classList.remove('hidden');
+      }
+
+      // Convert canvas to ArrayBuffer bytes
+      canvas.toBlob((blob) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          currentCoverBytes = new Uint8Array(e.target.result);
+        };
+        reader.readAsArrayBuffer(blob);
+      }, 'image/jpeg', 0.92);
+    };
+    img.src = url;
+  }
+
+  // 4. 수동 커버 이미지 첨부 및 드래그 앤 드롭
+  uploadCoverBtn.addEventListener('click', () => coverFileInput.click());
   coverFileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
-    if (file) handleImageFile(file);
+    if (file) handleCustomImageFile(file);
   });
 
-  // 3. 커버 사진 교체 (드래그 앤 드롭)
   coverFrame.addEventListener('dragover', (e) => {
     e.preventDefault();
     dragOverlay.classList.remove('hidden');
   });
-
   coverFrame.addEventListener('dragleave', (e) => {
     e.preventDefault();
     dragOverlay.classList.add('hidden');
   });
-
   coverFrame.addEventListener('drop', (e) => {
     e.preventDefault();
     dragOverlay.classList.add('hidden');
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      handleImageFile(file);
-    }
+    if (file && file.type.startsWith('image/')) handleCustomImageFile(file);
   });
 
-  function handleImageFile(file) {
+  function handleCustomImageFile(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      currentCoverBase64 = e.target.result;
-      coverPreview.src = currentCoverBase64;
-      coverPreview.classList.remove('hidden');
-      coverPlaceholder.classList.add('hidden');
-      coverSourceTag.textContent = 'Custom File Upload (1:1 Ready)';
-      coverSourceTag.classList.remove('hidden');
+      loadCoverFromUrl(e.target.result, 'Custom Upload (1:1 Ready)');
     };
     reader.readAsDataURL(file);
   }
 
-  // 4. M4A 다운로드 및 완벽 태그 매립 (WebSocket 스트리밍)
+  // 5. 순수 클라이언트 기반 M4A 태그 주입 & 다운로드 처리
   startTagBtn.addEventListener('click', () => {
-    const url = urlInput.value.trim();
-    if (!url) return;
+    if (!currentM4aArrayBuffer) {
+      alert('태그를 주입할 .m4a 오디오 파일을 먼저 선택해 주세요.');
+      return;
+    }
 
     startTagBtn.disabled = true;
-    startTagBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>오디오 무손실 추출 및 태깅 중...</span>';
-    progressBox.classList.remove('hidden');
-    downloadBox.classList.add('hidden');
-    
-    progressBar.style.width = '0%';
-    progressStatus.textContent = '웹소켓 연결 및 다운로드 준비 중...';
-    progressInfo.textContent = '0%';
+    startTagBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>M4A Atom 태그 주입 및 인코딩 중...</span>';
 
-    const wsUrl = `${API_WS_BASE}/ws/download`;
-    const ws = new WebSocket(wsUrl);
-
-    let isCompleted = false;
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify({
-        url,
+    try {
+      const metadata = {
         title: trackTitle.value.trim(),
         artist: trackArtist.value.trim(),
         album: trackAlbum.value.trim(),
         lyrics: trackLyrics.value.trim(),
-        cover_base64: currentCoverBase64
-      }));
-    };
+        coverBytes: currentCoverBytes
+      };
 
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      
-      if (msg.status === 'starting') {
-        progressStatus.textContent = msg.message;
-      } else if (msg.status === 'downloading') {
-        progressStatus.textContent = `유튜브 AAC 오디오 스트림 다운로드 중... (${msg.speed || ''})`;
-        progressBar.style.width = `${msg.progress}%`;
-        progressInfo.textContent = `${msg.progress}% (${msg.eta || 'calc'})`;
-      } else if (msg.status === 'converting') {
-        progressStatus.textContent = msg.message;
-        progressBar.style.width = '90%';
-        progressInfo.textContent = '90%';
-      } else if (msg.status === 'tagging') {
-        progressStatus.textContent = msg.message;
-        progressBar.style.width = '95%';
-        progressInfo.textContent = '95%';
-      } else if (msg.status === 'done') {
-        isCompleted = true;
-        progressBar.style.width = '100%';
-        progressInfo.textContent = '100%';
-        progressStatus.textContent = msg.message;
-        
-        finishedFilename.textContent = msg.filename;
-        const dlUrl = msg.download_url.startsWith('http') 
-          ? msg.download_url 
-          : `${API_HTTP_BASE}${msg.download_url}`;
-        downloadLink.href = dlUrl;
-        downloadBox.classList.remove('hidden');
-        
-        startTagBtn.disabled = false;
-        startTagBtn.innerHTML = '<i class="fa-solid fa-download"></i> <span>고음질 M4A 추출 & 태그 주입 및 완성하기</span>';
-        ws.close();
-      } else if (msg.status === 'error') {
-        alert(`다운로드 실패: ${msg.message}`);
-        startTagBtn.disabled = false;
-        startTagBtn.innerHTML = '<i class="fa-solid fa-download"></i> <span>고음질 M4A 추출 & 태그 주입 및 완성하기</span>';
-        ws.close();
-      }
-    };
+      // M4ATaggerEngine 호출 (0.05초 만에 바이너리 주입)
+      const taggedBlob = M4ATaggerEngine.embedTags(currentM4aArrayBuffer, metadata);
+      const downloadUrl = URL.createObjectURL(taggedBlob);
 
-    ws.onerror = (err) => {
-      if (isCompleted) return;
-      alert('웹소켓 통신 중 오류가 발생했습니다.');
+      const safeArtist = metadata.artist || 'Artist';
+      const safeTitle = metadata.title || 'Track';
+      const outputFilename = `${safeArtist} - ${safeTitle}.m4a`;
+
+      finishedFilename.textContent = outputFilename;
+      downloadLink.href = downloadUrl;
+      downloadLink.download = outputFilename;
+      downloadBox.classList.remove('hidden');
+
+      // 자동 다운로드 트리거 (아이폰 / PC)
+      downloadLink.click();
+
+    } catch (err) {
+      alert(`태그 매립 중 오류가 발생했습니다: ${err.message}`);
+    } finally {
       startTagBtn.disabled = false;
-      startTagBtn.innerHTML = '<i class="fa-solid fa-download"></i> <span>고음질 M4A 추출 & 태그 주입 및 완성하기</span>';
-    };
+      startTagBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> <span>🎉 완벽한 M4A 음원 생성 & 내 기기에 저장하기</span>';
+    }
   });
 });

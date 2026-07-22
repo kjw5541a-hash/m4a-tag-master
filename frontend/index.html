@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M4A Tag-Master Studio | Neumorphic Edition</title>
+  <title>M4A Tag-Master Studio | Pure Client Edition</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,24 +18,33 @@
         <div class="logo-icon"><i class="fa-solid fa-compact-disc"></i></div>
         <div>
           <h1 class="logo-text">M4A Tag-Master Studio</h1>
-          <p class="logo-subtext">YouTube to Apple-Standard M4A Audio & Metadata Pipeline</p>
+          <p class="logo-subtext">Pure Client-Side M4A Metadata & Lyrics Tagger Studio</p>
         </div>
       </div>
       <div class="header-badge">
         <span class="pulse-dot"></span>
-        <span>Lossless Stream Copy + MP4Cover + ©lyr</span>
+        <span>Zero-Server &bull; 100% Client Tagger &bull; MP4Cover + ©lyr</span>
       </div>
     </header>
 
-    <!-- Section 1: URL Input Bar -->
+    <!-- Section 1: File Selection & Metadata Search Bar -->
     <section class="url-section card-neumorphic">
-      <div class="url-input-wrapper">
-        <i class="fa-brands fa-youtube url-icon"></i>
-        <input type="text" id="youtube-url" class="inset-input" placeholder="유튜브 음악 영상 URL을 붙여넣으세요 (예: https://www.youtube.com/watch?v=...)" autocomplete="off">
+      <div class="file-upload-bar">
+        <input type="file" id="m4a-file-input" accept=".m4a,audio/mp4,audio/x-m4a" class="hidden">
+        <button id="select-m4a-btn" class="btn btn-secondary flex-grow-btn">
+          <i class="fa-solid fa-folder-open"></i> <span id="m4a-filename-display">아이폰 [파일] 앱 또는 PC에서 .m4a 음원 선택</span>
+        </button>
       </div>
-      <button id="analyze-btn" class="btn btn-primary">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>분석 및 메타데이터 스크래핑</span>
-      </button>
+
+      <div class="search-bar-row">
+        <div class="url-input-wrapper">
+          <i class="fa-solid fa-magnifying-glass url-icon"></i>
+          <input type="text" id="search-query" class="inset-input" placeholder="곡 제목 및 아티스트 검색 (예: 이적 하늘을 달리다 / IU Love wins all)">
+        </div>
+        <button id="search-btn" class="btn btn-primary">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span>커버 & 가사 자동 수집</span>
+        </button>
+      </div>
     </section>
 
     <!-- Section 2: Studio Grid -->
@@ -51,7 +60,7 @@
         <div id="cover-frame" class="cover-frame inset-frame">
           <div id="cover-placeholder" class="cover-placeholder">
             <i class="fa-solid fa-music"></i>
-            <p>유튜브 링크를 분석하거나<br>사진을 드래그 앤 드롭하세요</p>
+            <p>음원 검색 또는<br>이미지를 드래그 앤 드롭하세요</p>
           </div>
           <img id="cover-preview" src="" alt="Album Art" class="hidden">
           <div id="drag-overlay" class="drag-overlay hidden">
@@ -62,7 +71,7 @@
 
         <input type="file" id="cover-file" accept="image/jpeg,image/png,image/webp" class="hidden">
         <button id="upload-cover-btn" class="btn btn-secondary full-width">
-          <i class="fa-solid fa-folder-open"></i> <span>내 PC 사진으로 커버 교체하기</span>
+          <i class="fa-solid fa-camera"></i> <span>내 PC/아이폰 커버 사진 교체하기</span>
         </button>
       </section>
 
@@ -95,28 +104,17 @@
             <span><i class="fa-solid fa-align-left"></i> 표준 가사 텍스트 (©lyr)</span>
             <span class="lyrics-hint">Apple Music / 아이폰 완벽 호환 비싱크 가사</span>
           </label>
-          <textarea id="track-lyrics" class="inset-input textarea-lyrics" placeholder="분석 시 LRCLIB에서 가사가 자동 로드되며, 여기서 직접 입력하거나 수정할 수도 있습니다." rows="8"></textarea>
+          <textarea id="track-lyrics" class="inset-input textarea-lyrics" placeholder="검색 시 LRCLIB에서 가사가 자동 수집되며, 직접 수정하거나 자유롭게 작성하실 수 있습니다." rows="8"></textarea>
         </div>
       </section>
     </main>
 
-    <!-- Section 3: Action & Progress Panel -->
+    <!-- Section 3: Action & Export Panel -->
     <section class="action-section card-neumorphic">
-      <!-- Progress Bar (Hidden by default) -->
-      <div id="progress-box" class="progress-box hidden">
-        <div class="progress-header">
-          <span id="progress-status" class="progress-status">다운로드 준비 중...</span>
-          <span id="progress-info" class="progress-info">0%</span>
-        </div>
-        <div class="progress-track inset-track">
-          <div id="progress-bar" class="progress-fill"></div>
-        </div>
-      </div>
-
       <!-- Main Trigger Button -->
-      <button id="start-tag-btn" class="btn btn-main-action" disabled>
-        <i class="fa-solid fa-download"></i>
-        <span>고음질 M4A 추출 & 태그 주입 및 완성하기</span>
+      <button id="start-tag-btn" class="btn btn-main-action">
+        <i class="fa-solid fa-sparkles"></i>
+        <span>🎉 완벽한 M4A 음원 생성 & 내 기기에 저장하기</span>
       </button>
 
       <!-- Download Box (Hidden by default) -->
@@ -124,21 +122,23 @@
         <div class="success-message">
           <i class="fa-solid fa-circle-check"></i>
           <div>
-            <h4>완벽한 음원 파일이 준비되었습니다!</h4>
+            <h4>완벽한 태그가 포함된 음원이 완성되었습니다!</h4>
             <p id="finished-filename">filename.m4a</p>
           </div>
         </div>
         <a id="download-link" href="#" class="btn btn-download" download>
-          <i class="fa-solid fa-file-arrow-down"></i> <span>내 PC로 파일 저장하기</span>
+          <i class="fa-solid fa-file-arrow-down"></i> <span>내 PC/아이폰으로 저장하기</span>
         </a>
       </div>
     </section>
 
     <!-- Footer -->
     <footer class="app-footer">
-      <p>Powered by Google Antigravity &bull; 10-Year Veteran Developer Audio Engine</p>
+      <p>Powered by Google Antigravity &bull; Pure Client-Side M4A Engine</p>
     </footer>
   </div>
+
+  <script src="m4a-tagger-engine.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

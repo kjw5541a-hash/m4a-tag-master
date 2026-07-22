@@ -135,11 +135,40 @@ body.theme-neumorphic {
   padding: 24px;
 }
 
-/* Section 1: URL Input Bar */
+/* Section 1: File Selection & Search Bar */
 .url-section {
   display: flex;
+  flex-direction: column;
   gap: 16px;
+}
+
+.file-upload-bar {
+  display: flex;
+  width: 100%;
+}
+
+.flex-grow-btn {
+  width: 100%;
+  padding: 18px 24px;
+  font-size: 16px;
+  color: var(--primary-color);
+  justify-content: center;
+}
+
+.search-bar-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
   align-items: center;
+}
+
+@media (max-width: 768px) {
+  .search-bar-row {
+    flex-direction: column;
+  }
+  .search-bar-row .btn {
+    width: 100%;
+  }
 }
 
 .url-input-wrapper {
