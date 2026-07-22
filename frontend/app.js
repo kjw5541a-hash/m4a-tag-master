@@ -346,9 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
         await navigator.share({
-          files: [fileToShare],
-          title: outputFilename,
-          text: 'M4A Tag-Master Studio 태그 완료 음원'
+          files: [fileToShare]
         });
       } else {
         // Desktop / Chrome Fallback 다운로드 링크
