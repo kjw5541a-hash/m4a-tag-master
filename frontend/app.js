@@ -31,6 +31,20 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentM4aArrayBuffer = null;
   let currentCoverBytes = null; // Uint8Array
 
+  // 0. 스튜디오 상태 초기화 (이전 곡의 커버, 가사, 앨범 데이터 잔재 제거)
+  function resetStudioState() {
+    currentCoverBytes = null;
+    coverPreview.src = "";
+    coverPreview.classList.add('hidden');
+    coverPlaceholder.classList.remove('hidden');
+
+    trackAlbum.value = "";
+    trackLyrics.value = "";
+    updateLyricsStatusTag("");
+
+    downloadBox.classList.add('hidden');
+  }
+
   // 1. 가사 아코디언 접기/펼치기 제어
   lyricsHeader.addEventListener('click', () => {
     lyricsBody.classList.toggle('collapsed');
@@ -117,6 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function handleSelectedM4aFile(file) {
+    // 새 파일 선택 시 이전 곡 상태 완전 초기화
+    resetStudioState();
+
     const cleanName = file.name.normalize ? file.name.normalize('NFC') : file.name;
     m4aFilenameDisplay.textContent = `🎵 ${cleanName}`;
 
@@ -159,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('검색할 곡명이나 아티스트 이름을 입력해 주세요.');
       return;
     }
+    resetStudioState();
     fetchMetadataAndLyrics(q);
   });
 
