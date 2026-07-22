@@ -44,6 +44,13 @@ def analyze_youtube_url(req: AnalyzeRequest):
         'quiet': True,
         'skip_download': True,
         'extract_flat': False,
+        'nocheckcertificate': True,
+        'user_agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['mweb', 'android', 'ios', 'web'],
+            }
+        }
     }
     
     try:
@@ -154,7 +161,13 @@ async def websocket_download_and_tag(websocket: WebSocket):
                 'preferredquality': '0', # 원본 품질 유지
             }],
             'quiet': True,
-            'nocheckcertificate': True
+            'nocheckcertificate': True,
+            'user_agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['mweb', 'android', 'ios', 'web'],
+                }
+            }
         }
         
         await websocket.send_json({"status": "starting", "message": "유튜브 무손실 오디오 스트림 다운로드 시작..."})
