@@ -32,12 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCoverBytes = null; // Uint8Array
 
   // 0. 스튜디오 상태 초기화 (이전 곡의 커버, 가사, 앨범 데이터 잔재 제거)
-  function resetStudioState() {
+  function resetStudioState(keepInputs = false) {
     currentCoverBytes = null;
     coverPreview.src = "";
     coverPreview.classList.add('hidden');
     coverPlaceholder.classList.remove('hidden');
 
+    if (!keepInputs) {
+      trackArtist.value = "";
+      trackTitle.value = "";
+    }
     trackAlbum.value = "";
     trackLyrics.value = "";
     updateLyricsStatusTag("");
@@ -132,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleSelectedM4aFile(file) {
     // 새 파일 선택 시 이전 곡 상태 완전 초기화
-    resetStudioState();
+    resetStudioState(false);
 
     const cleanName = file.name.normalize ? file.name.normalize('NFC') : file.name;
     m4aFilenameDisplay.textContent = `🎵 ${cleanName}`;
@@ -169,14 +173,26 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsArrayBuffer(file);
   }
 
-  // 4. iTunes Search API & LRCLIB API 수집 (CORS 우회 로더 연동)
+  // 4. iTunes Search API & LRCLIB API 수집 (수동 입력된 가수/제목 기준 재검색)
   searchBtn.addEventListener('click', () => {
-    const q = searchQuery.value.trim();
+    const userArtist = trackArtist.value.trim();
+    const userTitle = trackTitle.value.trim();
+
+    let q = "";
+    if (userArtist || userTitle) {
+      q = `${userArtist} ${userTitle}`.trim();
+    } else {
+      q = searchQuery.value.trim();
+    }
+
     if (!q) {
       alert('검색할 곡명이나 아티스트 이름을 입력해 주세요.');
       return;
     }
-    resetStudioState();
+
+    searchQuery.value = q;
+    // 수동 입력된 제목/가수는 유지하면서 커버, 앨범, 가사만 새로 수집
+    resetStudioState(true);
     fetchMetadataAndLyrics(q);
   });
 
@@ -192,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await itunesResp.json();
         if (data.results && data.results.length > 0) {
           const match = data.results[0];
-          if (!trackTitle.value || trackTitle.value === query) trackTitle.value = match.trackName || '';
+          if (!trackTitle.value) trackTitle.value = match.trackName || '';
           if (!trackArtist.value) trackArtist.value = match.artistName || '';
           if (!trackAlbum.value) trackAlbum.value = match.collectionName || '';
 
