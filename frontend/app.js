@@ -31,6 +31,44 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentM4aArrayBuffer = null;
   let currentCoverBytes = null; // Uint8Array
 
+  // 입력 필드 전체 삭제 (x) 버튼 바인딩 및 가시성 토글
+  const clearButtons = document.querySelectorAll('.btn-clear');
+  
+  function updateClearButtonVisibility(inputEl) {
+    if (!inputEl) return;
+    const btn = document.querySelector(`.btn-clear[data-target="${inputEl.id}"]`);
+    if (btn) {
+      if (inputEl.value && inputEl.value.trim() !== '') {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
+    }
+  }
+
+  function updateAllClearButtons() {
+    [searchQuery, trackTitle, trackArtist, trackAlbum].forEach(updateClearButtonVisibility);
+  }
+
+  clearButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = btn.getAttribute('data-target');
+      const targetInput = document.getElementById(targetId);
+      if (targetInput) {
+        targetInput.value = '';
+        updateClearButtonVisibility(targetInput);
+        targetInput.focus();
+      }
+    });
+  });
+
+  [searchQuery, trackTitle, trackArtist, trackAlbum].forEach(inputEl => {
+    if (inputEl) {
+      inputEl.addEventListener('input', () => updateClearButtonVisibility(inputEl));
+    }
+  });
+
   // 0. 스튜디오 상태 초기화 (이전 곡의 커버, 가사, 앨범 데이터 잔재 제거)
   function resetStudioState(keepInputs = false) {
     currentCoverBytes = null;
@@ -47,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLyricsStatusTag("");
 
     downloadBox.classList.add('hidden');
+    updateAllClearButtons();
   }
 
   // 1. 가사 아코디언 접기/펼치기 제어
@@ -165,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       trackArtist.value = parsedArtist;
       trackTitle.value = parsedTitle;
+      updateAllClearButtons();
 
       if (cleanedQuery) {
         fetchMetadataAndLyrics(cleanedQuery);
@@ -244,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       searchBtn.disabled = false;
       searchBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>수집</span>';
+      updateAllClearButtons();
     }
   }
 

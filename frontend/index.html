@@ -2,8 +2,14 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>M4A Tag-Master Studio | Slim Edition</title>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Tag-Master">
+  
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +21,7 @@
     <!-- Header -->
     <header class="app-header slim-header">
       <div class="logo-area">
-        <div class="logo-icon"><i class="fa-solid fa-compact-disc"></i></div>
+        <div class="logo-icon-img"><img src="apple-touch-icon.png" alt="App Icon" class="app-icon-head"></div>
         <h1 class="logo-text">M4A Tag-Master Studio</h1>
       </div>
       <span class="header-badge"><i class="fa-solid fa-bolt"></i> Slim Edition</span>
@@ -31,7 +37,10 @@
         </button>
 
         <div class="search-input-wrapper">
-          <input type="text" id="search-query" class="inset-input slim-input" placeholder="곡명/가수 검색 (예: 이적 하늘을 달리다)">
+          <div class="input-with-clear flex-grow">
+            <input type="text" id="search-query" class="inset-input slim-input" placeholder="곡명/가수 검색 (예: 이적 하늘을 달리다)">
+            <span class="btn-clear hidden" data-target="search-query" title="전체 삭제"><i class="fa-solid fa-xmark"></i></span>
+          </div>
           <button id="search-btn" class="btn btn-primary btn-search">
             <i class="fa-solid fa-wand-magic-sparkles"></i> <span>수집</span>
           </button>
@@ -62,17 +71,26 @@
         <div class="metadata-column">
           <div class="form-row">
             <label for="track-title"><i class="fa-solid fa-heading"></i> 제목</label>
-            <input type="text" id="track-title" class="inset-input slim-input" placeholder="곡 제목 (©nam)">
+            <div class="input-with-clear">
+              <input type="text" id="track-title" class="inset-input slim-input" placeholder="곡 제목 (©nam)">
+              <span class="btn-clear hidden" data-target="track-title" title="전체 삭제"><i class="fa-solid fa-xmark"></i></span>
+            </div>
           </div>
 
           <div class="form-row">
             <label for="track-artist"><i class="fa-solid fa-user-music"></i> 가수</label>
-            <input type="text" id="track-artist" class="inset-input slim-input" placeholder="아티스트명 (©ART)">
+            <div class="input-with-clear">
+              <input type="text" id="track-artist" class="inset-input slim-input" placeholder="아티스트명 (©ART)">
+              <span class="btn-clear hidden" data-target="track-artist" title="전체 삭제"><i class="fa-solid fa-xmark"></i></span>
+            </div>
           </div>
 
           <div class="form-row">
             <label for="track-album"><i class="fa-solid fa-record-vinyl"></i> 앨범</label>
-            <input type="text" id="track-album" class="inset-input slim-input" placeholder="앨범명 (©alb)">
+            <div class="input-with-clear">
+              <input type="text" id="track-album" class="inset-input slim-input" placeholder="앨범명 (©alb)">
+              <span class="btn-clear hidden" data-target="track-album" title="전체 삭제"><i class="fa-solid fa-xmark"></i></span>
+            </div>
           </div>
         </div>
       </div>
